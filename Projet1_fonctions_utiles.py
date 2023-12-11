@@ -266,6 +266,18 @@ def créer_matrice(n):
         L.append([False]*n)
     return L
 
+def créer_plateau_de_balle(n):
+    '''
+    Une fonction qui crée une matrice de n*n.
+
+    Paramètre :
+    n -> (int)
+    '''
+    L=[]
+    for i in range(n):
+        L.append(['.']*n)
+    return L
+
 def afficher_matrice(matrice):
     '''
     Une fonction qui affiche une matrice ligne par ligne.
@@ -311,8 +323,9 @@ def a_gagne(matrice):
     (bool) True si toutes les listes sont entièrement False, False sinon.
     '''
     for ligne in matrice:
-        if any(ligne):
-            return False
+        for element in ligne :
+            if element != '.' :
+                return False
     return True
 
 
@@ -321,8 +334,8 @@ def affecte_liste(L,i, valeur):
 
 def placement_des_trous(matrice):
     for i in matrice:
-        nombre_trous = random.randint(1, 6)  # Choisissez un nombre aléatoire entre 1 et 6
-        indices_trous = random.sample(range(len(i)-1), nombre_trous)  # Choisissez aléatoirement des indices sans remplacement
+        nombre_trous = random.randint(1, 6) # Choisissez un nombre aléatoire entre 1 et 6
+        indices_trous = random.sample(range(len(i)), nombre_trous)  # Choisissez aléatoirement des indices sans remplacement
         for indice in indices_trous:
             affecte_liste(i, indice, True)
 
@@ -331,7 +344,7 @@ def recupere_liste_dans_matrice(matrice, i):
 
 # Début de l'objectif intermediaire 
 
-Plateau_de_balle = créer_matrice(7)
+Plateau_de_balle = créer_plateau_de_balle(7)
 tirage_verticale = créer_matrice(7)
 tirage_horizontal = créer_matrice(7)
 placement_des_trous(tirage_horizontal)
@@ -343,18 +356,20 @@ afficher_matrice(tirage_horizontal)
 print("------Les tirettes verticales-------")
 afficher_matrice(tirage_verticale)
 
-
 # Placement des billes par le joueur
 i = 0
-while i < 3:
-    Placement_des_billes1 = int(input("Placez votre bille dans le plateau (ligne) : "))
-    Placement_des_billes2 = int(input("Placez votre bille dans le plateau (colonne) : "))
+while i < 2:
+    Placement_des_billes1 = int(input("Placez votre bille dans le plateau (ligne) : ")) -1
+    Placement_des_billes2 = int(input("Placez votre bille dans le plateau (colonne) : ")) -1
     
     # Vérifie si la case est déjà occupée
-    if recupere_valeur(Placement_des_billes1, Placement_des_billes2, Plateau_de_balle):
-        print("La case est déjà occupée. Choisissez une autre case.")
+    if recupere_valeur(Placement_des_billes1,Placement_des_billes1,Plateau_de_balle)=='O':
+        print("La case est dejà occupé. Choisissez une autre case.")
+        i-=1
+    elif recupere_valeur(Placement_des_billes1, Placement_des_billes2, tirage_verticale)==True and recupere_valeur(Placement_des_billes1, Placement_des_billes2, tirage_horizontal)==True:
+        print("La case est un trou. Vous avez perdu votre bille.")
     else:
-        affecte_case(Placement_des_billes1, Placement_des_billes2, Plateau_de_balle, True)
+        affecte_case(Placement_des_billes1, Placement_des_billes2, Plateau_de_balle, 'O')
         i += 1
 
 # Affichage du plateau après le placement des billes
@@ -362,9 +377,10 @@ afficher_matrice(Plateau_de_balle)
 
 # Phase de tirage sur les tirettes
 arret = ""
+cpt =3
 while not a_gagne(Plateau_de_balle) and arret != 'fin':
     Utiliser_tirette1 = input("Quelle tirette vous voulez utiliser (Verticale/Horizontale) : ")
-    Utiliser_tirette2 = int(input("Choisissez la ligne ou la colonne à tirer : "))
+    Utiliser_tirette2 = int(input("Choisissez la ligne ou la colonne à tirer : ")) -1
     Utiliser_tirette3 = input("De quelle côté vous voulez tirer (Droite/Gauche), (Haut/Bas) : ")
 
     if Utiliser_tirette1 == "Verticale":
@@ -374,69 +390,38 @@ while not a_gagne(Plateau_de_balle) and arret != 'fin':
             decale_bas(tirage_verticale, Utiliser_tirette2)
         
     if Utiliser_tirette1 == "Horizontale":
-        L = recupere_liste_dans_matrice(tirage_verticale, Utiliser_tirette2)
+        L = recupere_liste_dans_matrice(tirage_horizontal, Utiliser_tirette2)
         if Utiliser_tirette3 == "Droite":
             decale_droite(L)
         elif Utiliser_tirette3 == "Gauche":
             decale_gauche(L)
 
+    print("------Les tirettes horizontales(Modifier)-------")
+    afficher_matrice(tirage_horizontal)
+    print("------Les tirettes verticales(Modifier)-------")
+    afficher_matrice(tirage_verticale)
+
     # Change la bille en False si elle est au-dessus d'un trou
     bille_tombee = False
     for ligne in range(len(Plateau_de_balle)):
         for colonne in range(len(Plateau_de_balle[ligne])):
-            if recupere_valeur(ligne, colonne, Plateau_de_balle) and recupere_valeur(ligne, colonne, tirage_horizontal) and recupere_valeur(ligne, colonne, tirage_horizontal):
-                affecte_case(ligne, colonne, Plateau_de_balle, False)
+            if recupere_valeur(ligne, colonne, Plateau_de_balle)=='O'  and recupere_valeur(ligne, colonne, tirage_horizontal) == True and recupere_valeur(ligne, colonne, tirage_verticale)== True:
+                affecte_case(ligne, colonne, Plateau_de_balle, '.')
                 bille_tombee = True
 
-    if bille_tombee:
+    if bille_tombee == True :
         print("Une bille est tombée ! Voici le plateau de billes mis à jour :")
         afficher_matrice(Plateau_de_balle)
-    print("------Plateau de balle-------")
+        
+    # Vérifie si le joueur a gagné
+    if a_gagne(Plateau_de_balle):
+        print("Il ne reste plus de billes sur le plateau ! Bien joué, vous avez gagné !")
+        break
+    
+    cpt-=1
+    if cpt == 0 :
+        print("Il ne vous reste plus de chances, vous avez perdu.")
+        break
 
-    afficher_matrice(Plateau_de_balle)
-    print("------Les tirettes horizontales-------")
-
-    afficher_matrice(tirage_horizontal)
-    print("------Les tirettes verticales-------")
-    afficher_matrice(tirage_verticale)
-    arret = input("Vous voulez continuer ? Si non, tapez 'fin' : ")
-
-# Affichage final
-print("------Plateau de balle-------")
-afficher_matrice(Plateau_de_balle)
-print("------Les tirettes horizontales-------")
-afficher_matrice(tirage_horizontal)
-print("------Les tirettes verticales-------")
-afficher_matrice(tirage_verticale)
-
-# Vérifie si le joueur a gagné
-if a_gagne(Plateau_de_balle):
-    print("Bien joué, vous avez gagné !")
-
-
-'''Plateau_de_balle = créer_matrice(7)
-Plateau_de_trou_horizontal = créer_matrice(7)
-Plateau_de_trou_vertical = créer_matrice(7)
-
-placement_des_trous(Plateau_de_trou_horizontal)
-placement_des_trous(Plateau_de_trou_vertical)
-print("------Plateau initial-------")
-afficher_matrice(Plateau_de_balle)
-print("\n------Plateau de tirette horizontale-------")
-afficher_matrice(Plateau_de_trou_horizontal)
-print("\n------Plateau de tirette verticale-------")
-afficher_matrice(Plateau_de_trou_vertical)
-
-i = 0
-nombre_de_billes  = int(input("Combien de billes voulez vous placez ? : "))
-while not a_gagne(Plateau_de_balle):
-    Placement_des_billes1 = int(input("Placez votre bille dans le plateau (ligne) : "))
-    Placement_des_billes2 = int(input("Placez votre bille dans le plateau (colonne) : "))
-    while i <nombre_de_billes :
-        if recupere_valeur(Placement_des_billes1, Placement_des_billes2, Plateau_de_balle):
-            print("La case est déjà occupée. Choisissez une autre case.")
-        else:
-            affecte_case(Placement_des_billes1, Placement_des_billes2, Plateau_de_balle, True)
-            i += 1
-    print("------Plateau initial-------")
-    afficher_matrice(Plateau_de_balle)'''
+    print("Il vous reste ", cpt, "chances restantes.")
+    arret = input("Vous voulez continuer('Oui') ? Si non, tapez 'fin' :  ")
