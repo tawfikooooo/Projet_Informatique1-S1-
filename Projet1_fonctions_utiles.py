@@ -42,10 +42,6 @@ def appartient(elems, x):
         if x == i :
             return True
         return False
-    
-if __name__ == "__main__" :
-    import doctest
-    doctest.testmod()
 
 # 3. (1) La fonction recherche
 
@@ -342,6 +338,7 @@ def placement_des_trous(matrice):
 def recupere_liste_dans_matrice(matrice, i):
     return matrice[i]
 
+
 # Début de l'objectif intermediaire 
 
 Plateau_de_balle = créer_plateau_de_balle(7)
@@ -377,7 +374,7 @@ afficher_matrice(Plateau_de_balle)
 
 # Phase de tirage sur les tirettes
 arret = ""
-cpt =3
+cpt =5
 while not a_gagne(Plateau_de_balle) and arret != 'fin':
     Utiliser_tirette1 = input("Quelle tirette vous voulez utiliser (Verticale/Horizontale) : ")
     Utiliser_tirette2 = int(input("Choisissez la ligne ou la colonne à tirer : ")) -1
@@ -423,5 +420,5 @@ while not a_gagne(Plateau_de_balle) and arret != 'fin':
         print("Il ne vous reste plus de chances, vous avez perdu.")
         break
 
-    print("Il vous reste ", cpt, "chances restantes.")
+    print("Il vous reste ", cpt, "chances.")
     arret = input("Vous voulez continuer('Oui') ? Si non, tapez 'fin' :  ")
