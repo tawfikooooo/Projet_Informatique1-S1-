@@ -161,22 +161,21 @@ def a_perdu(matrice, numero_joueur) :
                 return False
     return True 
 
-def pas_de_doublons(L):
-    for i in range(len(L)-1):
-        if L[i] != L[i+1] :
-            return False
-    return True 
+def tous_identiques(liste, element_a_comparer):
+    ensembles_uniques = set(liste)
+    return len(ensembles_uniques) == 1 and ensembles_uniques.pop() == element_a_comparer
 
 
 def a_gagne(matrice, numero_joueur):
-    L = []
+    L1 = []
     for i in range(len(matrice)):
         for j in range(len(matrice)):
             if plateau[i][j] != False :
-                L.append(plateau[i][j])
-    if pas_de_doublons(L) :
+                L1.append(plateau[i][j])
+    if tous_identiques(L1, numero_joueur) == True :
         return True 
-    return False
+    else:
+        return False
 
 nombre_de_joueurs = demander_nombre_joueurs()
 taille_fenetre = demander_taille_fenetre()
@@ -193,9 +192,6 @@ afficher_matrice(Tirette_horizontale)
 print("------------")
 afficher_matrice(Tirette_verticale)
 print("------------")
-afficher_matrice(plateau)
-print("------------")
-afficher_matrice(cercles)
 joueur_actuel = 1
 billes_placées_joueur1 = 0
 billes_placées_joueur2 = 0
@@ -244,7 +240,7 @@ while True:
             else :
                 print("Cette case est déjà prise ! ")
 
-            if billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3:
+            if billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and nombre_de_joueurs==2 or billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and billes_placées_joueur3 == 3 and nombre_de_joueurs==3 or  billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and billes_placées_joueur3 == 3 and billes_placées_joueur4 == 3 and nombre_de_joueurs == 4:
                 print("Tous les joueurs ont placé leurs billes. Fin du placement initial.")
                 i = 1
                 while i <= nombre_de_joueurs:
@@ -273,16 +269,21 @@ while True:
                     afficher_matrice(Tirette_horizontale)
                     print("------------")
                     afficher_matrice(Tirette_verticale)
-                    print("------------")
-                    afficher_matrice(plateau)
-                    print("------------")
-                    afficher_matrice(cercles)
                     dessine_plateau(plateau, cercles, taille_fenetre, Tirette_verticale, Tirette_horizontale)
                     i += 1
-                    if not a_gagne(plateau, 1) and not a_gagne(plateau, 2) and i > 2:
+                    if not a_gagne(plateau, 1) and not a_gagne(plateau, 2) and not a_gagne(plateau, 3) and not a_gagne(plateau, 4) and i > nombre_de_joueurs:
                         i = 1
-                    elif a_gagne(plateau, 1) == True or a_gagne(plateau, 2) == True :
-                        print ("Bien joué ! Le joueur dont ses billes sur le plateau sont les seules encore visibles a gagné la partie")
+                    elif a_gagne(plateau, 1) == True :
+                        print ("Bien joué ! Le joueur 1 a gagné la partie")
+                        break
+                    elif a_gagne(plateau,2) == True :
+                        print ("Bien joué ! Le joueur 2 a gagné la partie")
+                        break
+                    elif a_gagne(plateau,3) == True :
+                        print ("Bien joué ! Le joueur 3 a gagné la partie")
+                        break
+                    elif a_gagne(plateau,4) == True :
+                        print ("Bien joué ! Le joueur 4 a gagné la partie")
                         break
             
 
