@@ -1,7 +1,27 @@
 from fltk import *
 import time
 import random
+import tkinter as tk
+from PIL import ImageTk, Image
 
+TAILLE_FENETRE = 1000
+TAILLE_POLICE_MENU = int(TAILLE_FENETRE // ((1/3)*100))
+TAILLE_POLICE = int(TAILLE_FENETRE//25)
+TITRE_X = 8328
+TITRE_Y = 1982
+TAILLE_BANDEAU = TAILLE_FENETRE / 3.53
+RATIO_TITRE = (TAILLE_FENETRE - TAILLE_BANDEAU) / TITRE_X
+TAILLE_TITRE_Y = int(TITRE_Y*RATIO_TITRE)
+CONTOUR_CADRE = int(TAILLE_FENETRE / 200)
+TAILLE_TITRE_X = int((TITRE_X*RATIO_TITRE) - (3*CONTOUR_CADRE))
+BLEU = '#306998'
+BLANC = '#FFFFFF'
+GRIS = '#1F1F1F'
+JAUNE = '#FFE873'
+
+root = tk.Tk()
+root.geometry(f'{TAILLE_FENETRE}x{TAILLE_FENETRE}')
+root.title('.pyèges')
 taille_carre = 40
 taille_plateau = 7
 
@@ -57,7 +77,7 @@ def dessine_plateau(plateau, cercles, taille_fenetre, Tirette_verticale, Tirette
         for j, cellule in enumerate(lignes):
             x = depart_x + j * taille_carre
             y = depart_y + i * taille_carre
-            rectangle(x, y, x + taille_carre, y + taille_carre, remplissage='Grey')
+            rectangle(x, y, x + taille_carre, y + taille_carre, remplissage='#306998')
 
             if Tirette_verticale[i][j] == True and Tirette_horizontale[i][j] == False:
                 couleur_des_couches = '#306998'
@@ -322,13 +342,9 @@ def demander_saisie_texte(message, options_valides):
         else:
             print("Veuillez entrer une option valide parmi : {}".format(", ".join(options_valides)))
 
- 
 # Demande le nombre de joueurs et la taille de la fenêtre
 nombre_de_joueurs = demander_saisie_numerique('Choisissez le nombre de joueurs (2 à 4) : ', range(2, 5))
 taille_fenetre = demander_saisie_numerique('Choissez la taille de la fenêtre (Par exemple : 600) : ', range(200, 3000))
-
-# Crée la fenêtre du jeu
-cree_fenetre(taille_fenetre, taille_fenetre)
 
 # Initialise les matrices pour le plateau, les cercles et les tirettes
 plateau = créer_matrice(taille_plateau, Val=[False])
@@ -336,185 +352,319 @@ cercles = créer_matrice(taille_plateau, Val=[False])
 Tirette_verticale = créer_matrice(taille_plateau, Val=[False])
 Tirette_horizontale = créer_matrice(taille_plateau, Val=[False])
 
-# Place les trous sur les tirettes
-placement_des_trous(Tirette_verticale)
-placement_des_trous(Tirette_horizontale)
-afficher_matrice(Tirette_horizontale)
-print("------------------")
-afficher_matrice(Tirette_verticale)
-# Dessine le plateau initial avec les trous
-dessine_plateau(plateau, cercles, taille_fenetre, Tirette_verticale, Tirette_horizontale)
+if type(nombre_de_joueurs) == int and type(taille_fenetre) == int :
+    class MenuJouer:
+        def __init__(self, root):
+            self.root = root
+            self.nb_joueurs = 2
 
-# Initialise les compteurs de billes placées pour chaque joueur
-joueur_actuel = 1
-billes_placées_joueur1 = 0
-billes_placées_joueur2 = 0
-billes_placées_joueur3 = 0
-billes_placées_joueur4 = 0
+            self.joueurs_add_btn = tk.Button(root, text='+', font=('Bold', TAILLE_POLICE_MENU), fg=JAUNE, bd=int(TAILLE_FENETRE//120), bg=BLEU, command=self.nombre_joueurs_add)
+            self.joueurs_subs_btn = tk.Button(root, text='-', font=('Bold', TAILLE_POLICE_MENU), fg=JAUNE, bd=int(TAILLE_FENETRE//120), bg=BLEU, command=self.nombre_joueurs_subs)
+            self.jouer_btn = tk.Button(root, text='Jouer', font=('Bold', int(TAILLE_POLICE_MENU*1.5)), fg=JAUNE, bd=int(TAILLE_FENETRE//60), bg=BLEU)
+            self.label_joueurs = tk.Label(root, text=f'Nombre de joueurs : {self.nb_joueurs}', font=('Bold', TAILLE_POLICE_MENU), fg=BLANC, bg=BLEU)
 
-# Affiche l'instruction pour le premier joueur
-afficher_instruction("Joueur {}, placez vos trois billes sur le plateau.".format(joueur_actuel), tag_ins='Ins1')
+            self.joueurs_add_btn.place(x=int(int(TAILLE_FENETRE//1.76)), y=int(TAILLE_FENETRE//3))
+            self.joueurs_subs_btn.place(x=int(TAILLE_FENETRE//10), y=int(TAILLE_FENETRE//3))
+            self.jouer_btn.place(x=int(TAILLE_FENETRE//4), y=int(TAILLE_FENETRE//2))
+            self.label_joueurs.place(x=int(TAILLE_FENETRE//6.37), y=int(TAILLE_FENETRE//2.86))
 
-# Boucle principale du jeu
-while True:
-    ev = donne_ev()
-    tev = type_ev(ev)
+        def nombre_joueurs_add(self):
+            self.nb_joueurs += 1
+            if self.nb_joueurs > 4:
+                self.nb_joueurs = 4
+            self.update_label()
 
-    if tev == "ClicGauche":
-        # Récupère les coordonnées du clic
-        x = (abscisse(ev) - (taille_fenetre - taille_plateau * taille_carre) // 2) // taille_carre
-        y = (ordonnee(ev) - (taille_fenetre - taille_plateau * taille_carre) // 2) // taille_carre
+        def nombre_joueurs_subs(self):
+            self.nb_joueurs -= 1
+            if self.nb_joueurs < 2:
+                self.nb_joueurs = 2
+            self.update_label()
 
+        def update_label(self):
+            self.label_joueurs.config(text=f'Nombre de joueurs : {self.nb_joueurs}')
         
-        if not (0 <= x < taille_plateau and 0 <= y < taille_plateau):
-            afficher_instruction("Vous ne pouvez pas placez votre bille en dehors du plateau !", tag_ins='Alerte0', alert=True)
-            time.sleep(1)
-            efface('Alerte0')
-        else :
-            # Vérifie si la bille peut être placée
-            if Tirette_verticale[y][x] == True and Tirette_horizontale[y][x] == True:
-                afficher_instruction("Vous ne pouvez pas placez votre bille sur un trou !", tag_ins='Alerte1', alert=True)
-                time.sleep(1)
-                efface('Alerte1')
-            else:
-                if plateau[y][x] == False:
-                    # Vérifie les limites du plateau
-                    if 0 <= x < taille_plateau and 0 <= y < taille_plateau:
-                        # Place la bille en fonction du joueur actuel
-                        if joueur_actuel == 1 and billes_placées_joueur1 < 3:
-                            cercles[y][x] = True
-                            plateau[y][x] = 1
-                            billes_placées_joueur1 += 1
-                        elif joueur_actuel == 2 and billes_placées_joueur2 < 3:
-                            cercles[y][x] = True
-                            plateau[y][x] = 2
-                            billes_placées_joueur2 += 1
-                        elif joueur_actuel == 3 and billes_placées_joueur3 < 3:
-                            cercles[y][x] = True
-                            plateau[y][x] = 3
-                            billes_placées_joueur3 += 1
-                        elif joueur_actuel == 4 and billes_placées_joueur4 < 3:
-                            cercles[y][x] = True
-                            plateau[y][x] = 4
-                            billes_placées_joueur4 += 1
+        def jouer(self):
+            delete_pages()
+            self.update_label()
+            root.destroy()
 
-                        # Dessine le plateau mis à jour
-                        dessine_plateau(plateau, cercles, taille_fenetre, Tirette_verticale, Tirette_horizontale)
+    def start_game():
+        menu_jouer = MenuJouer(root)
+        menu_jouer.jouer()
+        cree_fenetre(taille_fenetre, taille_fenetre)
 
+        # Place les trous sur les tirettes
+        placement_des_trous(Tirette_verticale)
+        placement_des_trous(Tirette_horizontale)
+        afficher_matrice(plateau)
+        print("------------------")
+        afficher_matrice(cercles)
+        print("------------------")
+        afficher_matrice(Tirette_horizontale)
+        print("------------------")
+        afficher_matrice(Tirette_verticale)
+        # Dessine le plateau initial avec les trous
+        dessine_plateau(plateau, cercles, taille_fenetre, Tirette_verticale, Tirette_horizontale)
 
-                        # Change de joueur une fois que toutes les billes ont été placées
-                        if joueur_actuel == 1 and billes_placées_joueur1 == 3: 
-                            joueur_actuel = 2
-                            efface('Ins1')
-                            afficher_instruction("Joueur {}, placez vos trois billes sur le plateau.".format(joueur_actuel), tag_ins='Ins2')
-                        if joueur_actuel == 2 and billes_placées_joueur2 == 3 and nombre_de_joueurs >= 3:
-                            joueur_actuel = 3
-                            efface('Ins2')
-                            afficher_instruction("Joueur {}, placez vos trois billes sur le plateau.".format(joueur_actuel), tag_ins='Ins3')
-                        if joueur_actuel == 3 and billes_placées_joueur3 == 3 and nombre_de_joueurs >= 4:
-                            joueur_actuel = 4
-                            efface('Ins3')
-                            afficher_instruction("Joueur {}, placez vos trois billes sur le plateau.".format(joueur_actuel), tag_ins='Ins4')
-                        if joueur_actuel == 4 and billes_placées_joueur4 == 3:
-                            efface('Ins4')
-                            joueur_actuel = 0
+        # Initialise les compteurs de billes placées pour chaque joueur
+        joueur_actuel = 1
+        billes_placées_joueur1 = 0
+        billes_placées_joueur2 = 0
+        billes_placées_joueur3 = 0
+        billes_placées_joueur4 = 0
 
-                    else:
-                        # Avertissement si la case est déjà prise
-                        afficher_instruction("Cette case est déjà prise !", tag_ins='Alerte2', alert=True)
-                        time.sleep(1)
-                        efface('Alerte2')
+        # Affiche l'instruction pour le premier joueur
+        afficher_instruction("Joueur {}, placez vos trois billes sur le plateau.".format(joueur_actuel), tag_ins='Ins1')
 
-                else:
-                    # Avertissement si la bille ne peut pas être placée sur un trou
-                    afficher_instruction("Cette case est déjà prise !", tag_ins='Alerte2', alert=True)
-                    time.sleep(1)
-                    efface('Alerte2')
+        # Boucle principale du jeu
+        while True:
+            ev = donne_ev()
+            tev = type_ev(ev)
 
-            # Vérifie si toutes les billes ont été placées par tous les joueurs
-            if billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and nombre_de_joueurs==2 or billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and billes_placées_joueur3 == 3 and nombre_de_joueurs==3 or  billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and billes_placées_joueur3 == 3 and billes_placées_joueur4 == 3 and nombre_de_joueurs == 4:
-                efface('Ins2')
-                efface('Ins3')
-                efface('Ins4')
-                afficher_instruction("Tous les joueurs ont placé leurs billes, fin du placement !", tag_ins='Alerte3', alert=True)
-                time.sleep(2)
-                efface('Alerte3')
-                i = 1
+            if tev == "ClicGauche":
+                # Récupère les coordonnées du clic
+                x = (abscisse(ev) - (taille_fenetre - taille_plateau * taille_carre) // 2) // taille_carre
+                y = (ordonnee(ev) - (taille_fenetre - taille_plateau * taille_carre) // 2) // taille_carre
+
                 
-                # Boucle pour chaque joueur
-                while i <= nombre_de_joueurs:
-                    afficher_instruction("Joueur {}, choisissez une tirette (V/H) : ".format(i), tag_ins='tag1')
-                    choix_tirette = demander_saisie_texte("Choisissez une tirette (V/H): ", ['V', 'H'])
-                    if choix_tirette == 'V':
-                        efface('tag1')
-                        afficher_instruction("Choisissez la ligne (1 à {}): ".format(taille_plateau), tag_ins='tag2')
-                        ligne_tirette = demander_saisie_numerique("Choisissez la ligne (1 à {}): ".format(taille_plateau), range(1,taille_plateau+1))
-                        if type(ligne_tirette) == int :
-                            efface('tag2')
-                        afficher_instruction("Choisissez la direction (Haut/Bas): ", tag_ins= 'tag3')
-                        direction_tirette = demander_saisie_texte("Choisissez la direction (Haut/Bas): ", ['Haut','Bas'])
-                        if type(direction_tirette) == str:
-                            efface('tag3')
-                        if direction_tirette == 'Haut':
-                            decale_haut(Tirette_verticale, ligne_tirette - 1)
-                        elif direction_tirette == 'Bas':
-                            decale_bas(Tirette_verticale, ligne_tirette - 1)
-                        verifier_bille_et_supprimer(plateau)
+                if not (0 <= x < taille_plateau and 0 <= y < taille_plateau):
+                    afficher_instruction("Vous ne pouvez pas placez votre bille en dehors du plateau !", tag_ins='Alerte0', alert=True)
+                    time.sleep(1)
+                    efface('Alerte0')
+                else :
+                    # Vérifie si la bille peut être placée
+                    if Tirette_verticale[y][x] == True and Tirette_horizontale[y][x] == True:
+                        afficher_instruction("Vous ne pouvez pas placez votre bille sur un trou !", tag_ins='Alerte1', alert=True)
+                        time.sleep(1)
+                        efface('Alerte1')
+                    else:
+                        if plateau[y][x] == False:
+                            # Vérifie les limites du plateau
+                            if 0 <= x < taille_plateau and 0 <= y < taille_plateau:
+                                # Place la bille en fonction du joueur actuel
+                                if joueur_actuel == 1 and billes_placées_joueur1 < 3:
+                                    cercles[y][x] = True
+                                    plateau[y][x] = 1
+                                    billes_placées_joueur1 += 1
+                                elif joueur_actuel == 2 and billes_placées_joueur2 < 3:
+                                    cercles[y][x] = True
+                                    plateau[y][x] = 2
+                                    billes_placées_joueur2 += 1
+                                elif joueur_actuel == 3 and billes_placées_joueur3 < 3:
+                                    cercles[y][x] = True
+                                    plateau[y][x] = 3
+                                    billes_placées_joueur3 += 1
+                                elif joueur_actuel == 4 and billes_placées_joueur4 < 3:
+                                    cercles[y][x] = True
+                                    plateau[y][x] = 4
+                                    billes_placées_joueur4 += 1
 
-                    elif choix_tirette == 'H':
-                        efface('tag1')
-                        afficher_instruction("Choisissez la colonne (1 à {}): ".format(taille_plateau), tag_ins='tag2')
-                        colonne_tirette = demander_saisie_numerique("Choisissez la colonne (1 à {}): ".format(taille_plateau), range(1,taille_plateau+1))
-                        if type(colonne_tirette) == int :
-                            efface('tag2')
-                        afficher_instruction("Choisissez la direction (Gauche/Droite): ", tag_ins= 'tag3')
-                        direction_tirette = demander_saisie_texte("Choisissez la direction (Gauche/Droite): ", ['Gauche','Droite'])
-                        if type(direction_tirette) == str:
-                            efface('tag3')
-                        if direction_tirette == 'Gauche':
-                            decale_gauche(Tirette_horizontale[colonne_tirette - 1])
-                        elif direction_tirette == 'Droite':
-                            decale_droite(Tirette_horizontale[colonne_tirette - 1])
-                        verifier_bille_et_supprimer(plateau)
-                        
-                    afficher_matrice(Tirette_horizontale)
-                    print("------------------")
-                    afficher_matrice(Tirette_verticale)
-                    dessine_plateau(plateau, cercles, taille_fenetre, Tirette_verticale, Tirette_horizontale)
-                    i += 1
+                                # Dessine le plateau mis à jour
+                                dessine_plateau(plateau, cercles, taille_fenetre, Tirette_verticale, Tirette_horizontale)
 
-                    # Réinitialise le compteur pour boucler à nouveau si nécessaire
-                    if not a_gagne(plateau, 1) and not a_gagne(plateau, 2) and not a_gagne(plateau, 3) and not a_gagne(plateau, 4) and i > nombre_de_joueurs:
+
+                                # Change de joueur une fois que toutes les billes ont été placées
+                                if joueur_actuel == 1 and billes_placées_joueur1 == 3: 
+                                    joueur_actuel = 2
+                                    efface('Ins1')
+                                    afficher_instruction("Joueur {}, placez vos trois billes sur le plateau.".format(joueur_actuel), tag_ins='Ins2')
+                                if joueur_actuel == 2 and billes_placées_joueur2 == 3 and nombre_de_joueurs >= 3:
+                                    joueur_actuel = 3
+                                    efface('Ins2')
+                                    afficher_instruction("Joueur {}, placez vos trois billes sur le plateau.".format(joueur_actuel), tag_ins='Ins3')
+                                if joueur_actuel == 3 and billes_placées_joueur3 == 3 and nombre_de_joueurs >= 4:
+                                    joueur_actuel = 4
+                                    efface('Ins3')
+                                    afficher_instruction("Joueur {}, placez vos trois billes sur le plateau.".format(joueur_actuel), tag_ins='Ins4')
+                                if joueur_actuel == 4 and billes_placées_joueur4 == 3:
+                                    efface('Ins4')
+                                    joueur_actuel = 0
+
+                            else:
+                                # Avertissement si la case est déjà prise
+                                afficher_instruction("Cette case est déjà prise !", tag_ins='Alerte2', alert=True)
+                                time.sleep(1)
+                                efface('Alerte2')
+
+                        else:
+                            # Avertissement si la bille ne peut pas être placée sur un trou
+                            afficher_instruction("Cette case est déjà prise !", tag_ins='Alerte2', alert=True)
+                            time.sleep(1)
+                            efface('Alerte2')
+
+                    # Vérifie si toutes les billes ont été placées par tous les joueurs
+                    if billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and nombre_de_joueurs==2 or billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and billes_placées_joueur3 == 3 and nombre_de_joueurs==3 or  billes_placées_joueur1 == 3 and billes_placées_joueur2 == 3 and billes_placées_joueur3 == 3 and billes_placées_joueur4 == 3 and nombre_de_joueurs == 4:
+                        efface('Ins2')
+                        efface('Ins3')
+                        efface('Ins4')
+                        afficher_instruction("Tous les joueurs ont placé leurs billes, fin du placement !", tag_ins='Alerte3', alert=True)
+                        time.sleep(2)
+                        efface('Alerte3')
                         i = 1
-                    elif a_gagne(plateau, 1) == True :
-                        numero_joueur = 1
-                        afficher_instruction("Félicitations ! Joueur {}, a gagné la partie !.".format(numero_joueur), tag_ins='Win1')
-                        time.sleep(3)
+                        
+                        # Boucle pour chaque joueur
+                        while i <= nombre_de_joueurs:
+                            afficher_instruction("Joueur {}, choisissez une tirette (V/H) : ".format(i), tag_ins='tag1')
+                            choix_tirette = demander_saisie_texte("Choisissez une tirette (V/H): ", ['V', 'H'])
+                            if choix_tirette == 'V':
+                                efface('tag1')
+                                afficher_instruction("Choisissez la colonne (1 à {}): ".format(taille_plateau), tag_ins='tag2')
+                                ligne_tirette = demander_saisie_numerique("Choisissez la colonne (1 à {}): ".format(taille_plateau), range(1,taille_plateau+1))
+                                if type(ligne_tirette) == int :
+                                    efface('tag2')
+                                afficher_instruction("Choisissez la direction (Haut/Bas): ", tag_ins= 'tag3')
+                                direction_tirette = demander_saisie_texte("Choisissez la direction (Haut/Bas): ", ['Haut','Bas'])
+                                if type(direction_tirette) == str:
+                                    efface('tag3')
+                                if direction_tirette == 'Haut':
+                                    decale_haut(Tirette_verticale, ligne_tirette - 1)
+                                elif direction_tirette == 'Bas':
+                                    decale_bas(Tirette_verticale, ligne_tirette - 1)
+                                verifier_bille_et_supprimer(plateau)
+
+                            elif choix_tirette == 'H':
+                                efface('tag1')
+                                afficher_instruction("Choisissez la ligne (1 à {}): ".format(taille_plateau), tag_ins='tag2')
+                                colonne_tirette = demander_saisie_numerique("Choisissez la ligne (1 à {}): ".format(taille_plateau), range(1,taille_plateau+1))
+                                if type(colonne_tirette) == int :
+                                    efface('tag2')
+                                afficher_instruction("Choisissez la direction (Gauche/Droite): ", tag_ins= 'tag3')
+                                direction_tirette = demander_saisie_texte("Choisissez la direction (Gauche/Droite): ", ['Gauche','Droite'])
+                                if type(direction_tirette) == str:
+                                    efface('tag3')
+                                if direction_tirette == 'Gauche':
+                                    decale_gauche(Tirette_horizontale[colonne_tirette - 1])
+                                elif direction_tirette == 'Droite':
+                                    decale_droite(Tirette_horizontale[colonne_tirette - 1])
+                                verifier_bille_et_supprimer(plateau)
+                                
+                            afficher_matrice(plateau)
+                            print("------------------")
+                            afficher_matrice(cercles)
+                            print("------------------")
+                            afficher_matrice(Tirette_horizontale)
+                            print("------------------")
+                            afficher_matrice(Tirette_verticale)
+                            dessine_plateau(plateau, cercles, taille_fenetre, Tirette_verticale, Tirette_horizontale)
+                            i += 1
+
+                            # Réinitialise le compteur pour boucler à nouveau si nécessaire
+                            if not a_gagne(plateau, 1) and not a_gagne(plateau, 2) and not a_gagne(plateau, 3) and not a_gagne(plateau, 4) and i > nombre_de_joueurs:
+                                i = 1
+                            elif a_gagne(plateau, 1) == True :
+                                numero_joueur = 1
+                                afficher_instruction("Félicitations ! Joueur {}, a gagné la partie !.".format(numero_joueur), tag_ins='Win1')
+                                time.sleep(3)
+                                break
+                            elif a_gagne(plateau,2) == True :
+                                numero_joueur = 2
+                                afficher_instruction("Félicitations ! Joueur {}, a gagné la partie !.".format(numero_joueur), tag_ins='Win2')
+                                time.sleep(3)
+                                break
+                            elif a_gagne(plateau,3) == True :
+                                numero_joueur = 3
+                                afficher_instruction("Félicitations ! Joueur {}, a gagné la partie !.".format(numero_joueur), tag_ins='Win3')
+                                time.sleep(3)
+                                break
+                            elif a_gagne(plateau,4) == True :
+                                numero_joueur = 4
+                                afficher_instruction("Félicitations ! Joueur {}, a gagné la partie !.".format(numero_joueur), tag_ins='Win4')
+                                time.sleep(3)
+                                break
                         break
-                    elif a_gagne(plateau,2) == True :
-                        numero_joueur = 2
-                        afficher_instruction("Félicitations ! Joueur {}, a gagné la partie !.".format(numero_joueur), tag_ins='Win2')
-                        time.sleep(3)
-                        break
-                    elif a_gagne(plateau,3) == True :
-                        numero_joueur = 3
-                        afficher_instruction("Félicitations ! Joueur {}, a gagné la partie !.".format(numero_joueur), tag_ins='Win3')
-                        time.sleep(3)
-                        break
-                    elif a_gagne(plateau,4) == True :
-                        numero_joueur = 4
-                        afficher_instruction("Félicitations ! Joueur {}, a gagné la partie !.".format(numero_joueur), tag_ins='Win4')
-                        time.sleep(3)
-                        break
+
+            elif tev == 'Quitte':
                 break
 
-    elif tev == 'Quitte':
-        break
+            else:
+                pass
+            mise_a_jour()
 
-    else:
-        pass
-    mise_a_jour()
+        attend_ev()
+        ferme_fenetre()
 
-attend_ev()
-ferme_fenetre()
+    def affiche_image():
+        global nouveau_titre
+        image_titre = Image.open('titreimage.png')
+        redimension = image_titre.resize((TAILLE_TITRE_X, TAILLE_TITRE_Y), Image.LANCZOS)
+        image_titre = ImageTk.PhotoImage(file='titreimage.png')
+        nouveau_titre = ImageTk.PhotoImage(redimension)
+        titre_label = tk.Label(root, image=nouveau_titre, bg = GRIS)
+        titre_label.place(x = int(TAILLE_BANDEAU)+CONTOUR_CADRE, y = CONTOUR_CADRE)
 
+    def jouer_page():
+        delete_pages()
+        app = MenuJouer(main_frame)
+
+    def regles_page():
+        regles_frame = tk.Frame(main_frame)
+
+        lb = tk.Label(regles_frame, text='\n\n\nRegles du\njeu', font=('Bold', TAILLE_POLICE), fg=BLANC, bg=GRIS, slant='underline')
+        lb.pack()
+
+        regles_frame.pack(pady=TAILLE_FENETRE//30)
+    def parametres_page():
+        parametres_frame = tk.Frame(main_frame)
+
+        lb = tk.Label(parametres_frame, text='\n\n\nTaille de fenêtre :\n600', font=('Bold', TAILLE_POLICE), fg=BLANC, bg=GRIS)
+        lb.pack()
+
+        parametres_frame.pack(pady=TAILLE_FENETRE//30)
+    def quitter_page():
+        quitter_frame = tk.Frame(main_frame)
+
+        lb = tk.Label(quitter_frame, text='\n\n\nQuitter le jeu ?\n\n\nOui     Non', font=('Bold', TAILLE_POLICE), fg=BLANC, bg=GRIS)
+        lb.pack()
+
+        quitter_frame.pack(pady=TAILLE_FENETRE//30)
+
+    def hide_indicators():
+        jouer_indicate.config(bg=BLEU)
+        regles_indicate.config(bg=BLEU)
+        parametres_indicate.config(bg=BLEU)
+        quitter_indicate.config(bg=BLEU)
+    def delete_pages():
+        for frame in main_frame.winfo_children():
+            frame.destroy()
+
+    def indicate(lb, page):
+        hide_indicators()
+        delete_pages()
+        lb.config(bg=JAUNE)
+        page()
+
+    options_frame = tk.Frame(root, bg= BLEU)
+
+    jouer_btn = tk.Button(options_frame, text='Jouer()', font=('Bold', TAILLE_POLICE_MENU), fg=BLANC, bd=int(TAILLE_FENETRE//120), bg=BLEU, command=start_game)
+    jouer_btn.place(x=int(TAILLE_FENETRE//120), y=int(TAILLE_FENETRE//12))
+    jouer_indicate = tk.Label(options_frame, text='', bg= BLEU)
+    jouer_indicate.place(x=0, y=int(TAILLE_FENETRE//12), width=(TAILLE_FENETRE//120), height=TAILLE_FENETRE//11)
+
+
+    regles_btn = tk.Button(options_frame, text='Regles()', font=('Bold', TAILLE_POLICE_MENU), fg=BLANC, bd=int(TAILLE_FENETRE//120), bg=BLEU, command=lambda: indicate(regles_indicate, regles_page))
+    regles_btn.place(x=int(TAILLE_FENETRE//120), y=int(TAILLE_FENETRE//6))
+    regles_indicate = tk.Label(options_frame, text='', bg=BLEU)
+    regles_indicate.place(x=0, y=int(TAILLE_FENETRE//6), width=int(TAILLE_FENETRE//120), height =TAILLE_FENETRE//11)
+
+    parametres_btn = tk.Button(options_frame, text='Parametres()', font=('Bold', TAILLE_POLICE_MENU), fg=BLANC, bd=int(TAILLE_FENETRE//120), bg=BLEU, command=lambda: indicate(parametres_indicate, parametres_page))
+    parametres_btn.place(x=int(TAILLE_FENETRE//120), y=int(TAILLE_FENETRE//4))
+    parametres_indicate = tk.Label(options_frame, text='', bg=BLEU)
+    parametres_indicate.place(x=0, y=int(TAILLE_FENETRE//4), width=(TAILLE_FENETRE//120), height =TAILLE_FENETRE//11)
+
+    quitter_btn = tk.Button(options_frame, text='Quitter()', font=('Bold', TAILLE_POLICE_MENU), fg=BLANC, bd=int(TAILLE_FENETRE//120), bg=BLEU, command=lambda: indicate(quitter_indicate, quitter_page))
+    quitter_btn.place(x=int(TAILLE_FENETRE//120), y=int(TAILLE_FENETRE//3))
+    quitter_indicate = tk.Label(options_frame, text='', bg=BLEU)
+    quitter_indicate.place(x=0, y=int(TAILLE_FENETRE//3), width=(TAILLE_FENETRE//120), height =TAILLE_FENETRE//11)
+
+    options_frame.pack(side=tk.LEFT)
+    options_frame.pack_propagate(False)
+    options_frame.configure(width=int(TAILLE_BANDEAU), height=TAILLE_FENETRE)
+
+    main_frame = tk.Frame(root, bg=GRIS, highlightbackground=BLANC, highlightthickness=3)
+
+    main_frame.pack(side=tk.LEFT)
+    main_frame.pack_propagate(False)
+    main_frame.configure(width=int(TAILLE_FENETRE-TAILLE_BANDEAU+CONTOUR_CADRE), height=TAILLE_FENETRE)
+
+    affiche_image()
+    root.mainloop() 
